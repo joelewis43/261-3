@@ -11,18 +11,21 @@
 *	worked on from Worksheet 18. The main used for testing is
 *	included in this file, so that the program is able to be
 *	compiled/built and run (see 'Usage').
+*
 *	The queue ADT allows for the following behavior:
 *		- adding a new link to the back (enqueue)
 *		- getting the value of the front
 *		- removing the front link (dequeue)
 *		- checking if the queue is empty
+*
 *	The stack implementation using the queue ADT " ":
 *		- adding a new link to the front (push - expensive)
 *		- removing the front link (pop)
 *		- getting the value of the front link (top)
 *		- checking if the stack is empty
+*
 *	The criticial piece to utilizing two queues to implement a 
-*	stack involve using the second queue to properly dequeue
+*	stack involve using the second queue to properly deque
 *	the first queue's links when performing a push operation 
 *	and swapping the first and second queues so the first 
 *	always represents the actual 'stack'. This makes this op
@@ -76,7 +79,23 @@ struct Stack {
  */
 void listQueueInit(struct Queue* queue) 
 {
-	/* FIXME: You will write this function */
+	/* Should look like
+		H -> Sentinel
+		T -> Sentinel
+		Sentinel -> NULL
+	*/
+
+	//allocate head and tail
+	queue->head = malloc(sizeof(struct Link));
+	queue->tail = malloc(sizeof(struct Link));
+
+	//allocate sentinel
+	struct Link * sentinel = malloc(sizeof(struct Link));
+
+	//point next to correct position
+	queue->head->next = sentinel;
+	queue->tail->next = sentinel;
+	sentinel->next = NULL;
 
 }
 
@@ -89,8 +108,13 @@ void listQueueInit(struct Queue* queue)
  */
 struct Queue* listQueueCreate() 
 {
-	
-     /* FIXME: You will write this function */
+	//allocate memory
+	struct Queue * newQueue = malloc(sizeof(struct Queue));
+
+	//initialize the queue
+	listQueueInit(newQueue);
+
+	return newQueue;
 }
 
 /**
@@ -103,8 +127,13 @@ struct Queue* listQueueCreate()
  */
 void listQueueAddBack (struct Queue* queue, TYPE value) 
 {
-	/* FIXME: You will write this function */
+	//allocate and assign value to new link
+	struct Link * newLink = malloc(sizeof(struct Link));
+	newLink->value = value;
 
+	//add link to the back of queue
+	newLink->next = queue->tail->next;
+	queue->tail->next = newLink;
 }
 
 /**
@@ -118,7 +147,7 @@ void listQueueAddBack (struct Queue* queue, TYPE value)
 TYPE listQueueFront(struct Queue* queue) 
 {
 
-   /* FIXME: You will write this function */
+   return queue->head->next->next;
 
 }
 
@@ -320,7 +349,8 @@ int main()
 	// listStackTop(s); 	// should fail assert
 
 	printf("\npushing 0-9...\n");
-	for(int i = 0; i < 10; i++) {
+	int i;
+	for(i = 0; i < 10; i++) {
 		listStackPush(s, i);
 	}
 	assertTrue(listStackTop(s) == 9, "top val == 9\t");
