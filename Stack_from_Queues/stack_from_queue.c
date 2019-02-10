@@ -79,24 +79,12 @@ struct Stack {
  */
 void listQueueInit(struct Queue* queue) 
 {
-	/* Should look like
-		H -> Sentinel
-		T -> Sentinel
-		Sentinel -> NULL
-	*/
+	//allocate sentinel
+	struct Link * Lnk = malloc(sizeof(struct Link));
 
 	//allocate head and tail
-	queue->head = malloc(sizeof(struct Link));
-	queue->tail = malloc(sizeof(struct Link));
-
-	//allocate sentinel
-	struct Link * sentinel = malloc(sizeof(struct Link));
-
-	//point next to correct position
-	queue->head->next = sentinel;
-	queue->tail->next = sentinel;
-	sentinel->next = NULL;
-
+	queue->head = queue->tail = Lnk;
+	Lnk->next = NULL;
 }
 
 /**
@@ -129,11 +117,12 @@ void listQueueAddBack (struct Queue* queue, TYPE value)
 {
 	//allocate and assign value to new link
 	struct Link * newLink = malloc(sizeof(struct Link));
+	newLink->next = NULL;
 	newLink->value = value;
 
 	//add link to the back of queue
-	newLink->next = queue->tail->next;
-	queue->tail->next = newLink;
+	queue->tail->next = newLink; 
+	queue->tail = newLink;
 }
 
 /**
@@ -147,7 +136,7 @@ void listQueueAddBack (struct Queue* queue, TYPE value)
 TYPE listQueueFront(struct Queue* queue) 
 {
 
-   return queue->head->next->next;
+   return queue->head->next->value;
 
 }
 
@@ -161,8 +150,23 @@ TYPE listQueueFront(struct Queue* queue)
  */
 TYPE listQueueRemoveFront(struct Queue* queue) 
 {
-	/* FIXME: You will write this function */
+	//store link to be removed
+	struct Link * tempLink = queue->head->next;
 
+	//store value being removed
+	TYPE tempValue = tempLink->value;
+
+	//reassign sentinel pointer to next link in queue
+	queue->head->next = tempLink->next;
+
+	if (queue->tail == tempLink) {
+		queue->tail = queue->head;
+	}
+
+	//remove link
+	free(tempLink);
+
+	return tempValue;
 }
 
 /**
@@ -175,7 +179,10 @@ TYPE listQueueRemoveFront(struct Queue* queue)
  */
 int listQueueIsEmpty(struct Queue* queue) 
 {
-	/* FIXME: You will write this function */
+	if (queue->head->next == NULL) {
+		return 1;
+	}
+	return 0;
 }
 
 /**
@@ -211,8 +218,14 @@ void listQueueDestroy(struct Queue* queue)
  */
 struct Stack* listStackFromQueuesCreate() 
 {
-	 /* FIXME: You will write this function */
+	//allocate stack
+	struct Stack * newStack = malloc(sizeof(struct Stack));
 
+	//allocate queues
+	newStack->q1 = listQueueCreate();
+	newStack->q2 = listQueueCreate();
+
+	return newStack;
 };
 
 /**
@@ -248,8 +261,10 @@ void listStackDestroy(struct Stack* stack)
  */
 int listStackIsEmpty(struct Stack* stack)
 {
-	
-	/* FIXME: You will write this function */
+	if(listQueueIsEmpty(stack->q1)) {
+		return 1;
+	}
+	return 0;
 }
 
 /**
@@ -262,8 +277,9 @@ int listStackIsEmpty(struct Stack* stack)
  */
 void listSwapStackQueues(struct Stack* stack)
 {
-	/* FIXME: You will write this function */
-
+	struct Queue * tempQ = stack->q1;
+	stack->q1 = stack->q2;
+	stack->q2 = tempQ;
 }
 
 /**
@@ -272,6 +288,7 @@ void listSwapStackQueues(struct Stack* stack)
 	dequeued/removed and added to the back of Queue q2, so that in
 	the end, Queue q2 has the new order to represent the stack properly
 	with the new value at the front of the queue.
+	
 	param: 	stack 	struct LinkedList ptr
 	param: 	value 	TYPE
 	pre: 	stack is not null
@@ -282,7 +299,17 @@ void listSwapStackQueues(struct Stack* stack)
  */
 void listStackPush(struct Stack* stack, TYPE value) 
 {
-	/* FIXME: You will write this function */
+	//add link to q2
+	listQueueAddBack(stack->q2, value);
+
+	//take values from q1 and add to back of q2
+	while (!listQueueIsEmpty(stack->q1)) {
+		listQueueAddBack(stack->q2, listQueueRemoveFront(stack->q1));
+	}
+
+	//q1 represents current stack
+	//q2 is empty
+	listSwapStackQueues(stack);
 }
 
 /**
@@ -295,7 +322,7 @@ void listStackPush(struct Stack* stack, TYPE value)
  */
 TYPE listStackPop(struct Stack* stack) 
 {
-	/* FIXME: You will write this function */
+	return listQueueRemoveFront(stack->q1);
 }
 
 /**
@@ -308,7 +335,17 @@ TYPE listStackPop(struct Stack* stack)
  */
 TYPE listStackTop(struct Stack* stack) 
 {
-	/* FIXME: You will write this function */
+	return listQueueFront(stack->q1);
+}
+
+void printStack(struct Stack * s) {
+	struct Link * temp = s->q1->head->next;
+
+	while (temp != NULL) {
+		printf("%d  ", temp->value);
+		temp = temp->next;
+	}
+	printf("\n");
 }
 
 /**
@@ -340,7 +377,7 @@ int main()
 	listStackPush(s, -300);
 	
 	assertTrue(listStackIsEmpty(s) == 0, "stackIsEmpty == 0");
-	assertTrue(listStackPop(s) == -300, "\npopping; val == -300");
+	assertTrue(listStackPop(s) == 3, "\npopping; val == -300");
 	assertTrue(listStackPop(s) == 5, "popping; val == 5");
 	assertTrue(listStackTop(s) == 4, "top val == 4\t");
 	assertTrue(listStackPop(s) == 4, "popping; val == 4");
@@ -359,4 +396,3 @@ int main()
 
 	return 0;
 }
-
